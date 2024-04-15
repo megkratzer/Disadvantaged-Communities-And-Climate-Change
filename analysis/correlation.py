@@ -11,9 +11,17 @@ df = df.set_index(['Census tract 2010 ID','County Name','State/Territory'])
 
 #correlation plot
 corr_matrix = df.corr()
-plt.figure(figsize=(20, 14))  # Adjust size as needed
-mask = np.triu(np.ones_like(corr_matrix, dtype=bool))
-sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt=".2f",annot_kws={"size": 8},mask=mask)
+plt.figure(figsize=(20, 14)) 
+#mask upper triangle
+mask_upper = np.triu(np.ones_like(corr_matrix, dtype=bool))
+#generate heatmap without annotations
+sns.heatmap(corr_matrix, cmap='coolwarm', center=0, mask=mask_upper)
+#annotate each cell
+for i in range(len(corr_matrix)):
+    for j in range(i + 1):
+        plt.text(j + 0.5, i + 0.5, '{:0.2f}'.format(corr_matrix.iloc[i, j]),
+                 horizontalalignment='center', verticalalignment='center', fontsize=10)
+#format and save
 plt.title('Correlation Matrix')
 plt.tight_layout()
 plt.savefig('../images/correlation_matrix.png')
