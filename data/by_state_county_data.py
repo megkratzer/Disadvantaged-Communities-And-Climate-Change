@@ -27,7 +27,6 @@ tracts['Climate_Risk_Index'] = tracts['EALR_PFS'] + tracts['EBLR_PFS'] + tracts[
 state_data = tracts.groupby('SF').agg(
     Total_Tracts=('SN_C', 'count'),
     Disadvantaged_Tracts=('SN_C', 'sum'),
-    Climate_Change_Factors=('Climate_Risk_Index', 'mean')
 ).reset_index()
 
 #calculate percentage of disadvantaged tracts
@@ -41,14 +40,14 @@ state_geometry = state_geometry.merge(state_data, on='SF')
 
 #export state level to new shp
 state_geometry.to_file('../data/dissolved_disadvantaged.gpkg', layer='states')
-state_data.to_csv('../data/state_disadvantaged_percentage.csv', index=False)
 
 
 
 #do the same analysis as above but by county level
 county_data = tracts.groupby('CF').agg(
     Total_Tracts=('SN_C', 'count'),
-    Disadvantaged_Tracts=('SN_C', 'sum')
+    Disadvantaged_Tracts=('SN_C', 'sum'),
+    Climate_Change_Factors=('Climate_Risk_Index', 'mean')
 ).reset_index()
 
 county_data['Disadvantaged_Percentage'] = county_data['Disadvantaged_Tracts'] / county_data['Total_Tracts'] * 100
@@ -58,4 +57,3 @@ county_geometry = tracts.dissolve(by='CF')
 county_geometry = county_geometry.merge(county_data, on='CF')
 
 county_geometry.to_file('../data/dissolved_disadvantaged.gpkg', layer='counties')
-county_data.to_csv('../data/counties_disadvantaged_percentage.csv', index=False)
