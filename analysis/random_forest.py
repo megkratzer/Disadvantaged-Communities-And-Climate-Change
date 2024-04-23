@@ -23,7 +23,7 @@ df = df.set_index(['Census tract 2010 ID','County Name','State/Territory'])
 
 #check data for any nulls
 len(df)
-df.isna().sum()
+print(df.isna().sum())
 #histric underinvestment is almost entirely null, so we will delete that col and impute all other missing values later
 df = df.drop('Underinvestment',axis=1)
 
@@ -101,22 +101,21 @@ sorted_feature_names = [feature_names[i] for i in indices]
 plt.rcParams['figure.dpi'] = 300
 plt.figure(figsize=(10, 6))
 plt.title("Feature Importances")
-plt.bar(range(len(sorted_feature_importances)), sorted_feature_importances)
-plt.xticks(range(len(sorted_feature_names)), sorted_feature_names, rotation=90)
-plt.xlabel('Features')
-plt.ylabel('Importance')
+plt.barh(range(len(sorted_feature_importances)), sorted_feature_importances)
+plt.yticks(range(len(sorted_feature_names)), sorted_feature_names)
+plt.xlabel('Importance')
+plt.ylabel('')
 plt.tight_layout()
 plt.savefig('../images/rf_feature_importances.png')
 
 #%%
 #calculate mse during cross validation and predict on test set
-#the main goal with using random forest was to generate the feature importances, so how the model performed is not as relevent,
-#but we will calculate it anyways
+#the main goal with using random forest was to generate the feature importances, 
+#so how the model performed is not as relevent, but we will calculate it anyways
 
 rf_scores = cross_val_score(rf_pipeline, X_train, y_train, cv=5, scoring='neg_mean_squared_error')
 
-# The mean score is negative due to the convention 'higher is better',
-# so we take the negative of the scores to get positive error values.
+#compute the avg MSE of the cross validated models
 mse = -np.mean(rf_scores)
 print(f"The average cross validation MSE is {mse}")
 
