@@ -7,21 +7,39 @@ from sklearn.utils.extmath import randomized_svd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
 
-#load data
-df = pd.read_csv('../data/modeling_data.csv')
+#read in trimmed data, make sure to set tract to be string
+df = pd.read_csv('../data/trimmed_data.csv', dtype={'Census tract 2010 ID':str})
 df = df.set_index(['Census tract 2010 ID','County Name','State/Territory'])
 
-#create X and y datasets
-y = df['climate_all']
-X = df.drop('climate_all', axis=1)
+#drop underinvestment since it's mostly null
+df = df.drop('Underinvestment',axis=1)
+
+numeric_features = df.drop(['Low_Income','Disadvantaged'],axis=1).columns
+categorical_features = df[['Low_Income','Disadvantaged']].columns
 
 #scale and impute data
-imputer = KNNImputer(n_neighbors=10)
-scaler = RobustScaler()
-X_imputed = imputer.fit_transform(X)
-X_scaled = scaler.fit_transform(X_imputed)
+X = df.copy()
+numeric_transformer = Pipeline(steps=[
+    ('imputer', KNNImputer(n_neighbors=10)),
+    ('scaling', RobustScaler())
+])
+categorical_transformer = Pipeline(steps=[
+    ('encoder', OneHotEncoder(handle_unknown='ignore', drop='first'))])
 
+#combine preprocessers and specify columns
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numeric_features),
+        ('cat', categorical_transformer, categorical_features)])
+pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor)
+])
+
+X_scaled = pipeline.fit_transform(X)
 #%%
 #decide the number of factors using parallel analysis
 
@@ -48,21 +66,21 @@ print("Number of factors suggested by Parallel Analysis:", num_factors)
 #%%
 #analyze factor loadings
 
-n_factors = 6 #as suggested by parallel analysis above
+n_factors =11 #as suggested by parallel analysis above
 fa = FactorAnalysis(n_components=n_factors, rotation='varimax')
 fa.fit(X_scaled)
 
 #%%
 #turn factor loadings into df and view
 loadings = fa.components_.T
-loadings_df = pd.DataFrame(loadings, columns=['Factor {}'.format(i+1) for i in range(n_factors)], index=df.columns.drop('climate_all'))
+loadings_df = pd.DataFrame(loadings, columns=['Factor {}'.format(i+1) for i in range(n_factors)], index=df.columns)
 print(loadings_df)
 
 #plot loadings
 plt.rcParams['figure.dpi'] = 300
 plt.figure(figsize=(12, 10)) 
 #create heatmap without annotations
-sns.heatmap(loadings_df, cmap='coolwarm', center=0)
+sns.heatmap(loadings_df, cmap='coolwarm', center=0, robust=True)
 #add annotations
 for (i, j), value in np.ndenumerate(loadings_df.values):
     plt.text(j + 0.5, i + 0.5, f"{value:.2f}", 
@@ -80,25 +98,25 @@ X_factor_scores = fa.transform(X_scaled)
 
 #investigate elbow plot to determine k
 inertia = []
-for k in range(1, 11):  # Change the range as needed
+for k in range(1, 30):  # Change the range as needed
     kmeans = KMeans(n_clusters=k, random_state=123)
     kmeans.fit(X_factor_scores)
     inertia.append(kmeans.inertia_)
 
 # Plot the Elbow Curve
 plt.figure(figsize=(8, 6))
-plt.plot(range(1, 11), inertia, marker='o')  # Change the range as needed
+plt.plot(range(1, 30), inertia, marker='o')  # Change the range as needed
 plt.title('Elbow Method For Optimal k')
 plt.xlabel('Number of clusters')
 plt.ylabel('Inertia')
 plt.tight_layout()
 plt.show()
 
-#there is not a super clear elbow, but it looks like the graph begins to level off around k=5
+#it looks like the graph has an elbow around k=11
 
 #%%
 #pick k of 5 
-kmeans = KMeans(n_clusters=5, random_state=123)
+kmeans = KMeans(n_clusters=11, random_state=123)
 kmeans.fit(X_factor_scores)
 
 #add labels to df
@@ -116,4 +134,3 @@ plt.savefig('../images/clusters.png')
 
 #export to csv for later use in qgis
 df.reset_index().to_csv('../data/clustered_data.csv', index=False)
-

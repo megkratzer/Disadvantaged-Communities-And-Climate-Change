@@ -108,6 +108,9 @@ plt.ylabel('')
 plt.tight_layout()
 plt.savefig('../images/rf_feature_importances.png')
 
+#example correlation, mathmatically understanding if green_space has a positive or negative impact on climate change
+print(df[['climate_all','Green_Space']].corr())
+
 #%%
 #calculate mse during cross validation and predict on test set
 #the main goal with using random forest was to generate the feature importances, 
