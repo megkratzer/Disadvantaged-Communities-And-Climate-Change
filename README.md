@@ -53,7 +53,7 @@ Parallel analysis suggested that 11 factors is ideal for this dataset, and the r
 
 ![Factor Loadings Heatmap](/images/factor_loadings.png)
 
-## Clustering
+### Clustering
 
 The above factor loadings were used to determine clustering assignments for all tracts, and these clusters were then mapped in QGIS. On a national scale it is interesting to see the clusters somewhat match known similariies. For example, the cluster lines through the south east in pink and neon green, most of western Texas and southern New Mexico is clustered in blue, and a lot of the midwest is one green cluster. Possibly more important to local policy makers, however, are the cluster assignments that one might not expect. These clusters represent tracts that may have similar demographic makeups, but also show very similar climate, social, and economic status and therefore could aid policy makers to provide support to communities facing similar issues that they may not have thought to group together previously. 
 
